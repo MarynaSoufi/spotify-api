@@ -123,5 +123,21 @@ describe('test our endpoints with HTTP-request', () => {
     done();
   });
 
+  it('should return an existing song', async (done) => {
+    const songId = '30';
+    const response = await request(app)
+      .get(`/api/songs/${songId}`)
+      .set('Accept', 'application/json')
+      // .set('Authorization', "Bearer " + token);
+    expect(response.statusCode).toEqual(200);
+    expect(typeof response).toBe('object');
+    expect(response.body).toHaveProperty('id');
+    expect(response.body).toHaveProperty('name');
+    expect(response.body).toHaveProperty('artist');
+    expect(response.body).toHaveProperty('uri');
+    expect(response.body).toHaveProperty('createdAt');
+    done();
+  });
+
 
 });
