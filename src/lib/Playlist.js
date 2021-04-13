@@ -57,11 +57,14 @@ export default class PlaylistsDb {
  * @param {string} id
  * @param {string} description
  */
-    async update(id, name, modifiedAt, userId) {
+    async update(id, name, modifiedAt =  moment.utc().format('YYYY-MM-DD hh:mm:mm'), userId) {
       try {
-        //i use moment js to make the modifiedAt column
-        modifiedAt = moment().format('YYYY-MM-DD HH:MM:SS');
-        return await knexSpotify('playlists').where("user_id", userId).where("id", parseInt(id)).update({ name, modifiedAt });
+        if (name) {
+          return await knexSpotify('playlists').where("user_id", userId).where("id", parseInt(id)).update({ name, modifiedAt });
+        }else {
+          return await knexSpotify('playlists').where("user_id", userId).where("id", parseInt(id)).update({ modifiedAt });
+        }
+        
       } catch(e) {
         console.error(e.message);
       }
@@ -83,13 +86,23 @@ async delete(userId, id) {
 /**
  * Get all the playlists by user id
  */
- async  get(userId, id = null) {
+ async get(userId, id = null) {
   try {
     if (!id) {
       return await knexSpotify('playlists').where("user_id", userId);
     }
     const [playlist] = await knexSpotify('playlists').where("user_id", userId).where("id", parseInt(id));
     return playlist;
+  } catch (message) {
+    console.error(message);
+  }
+}
+/**
+ * get all playlists (for test)
+ */
+async getAll() {
+  try {
+    return await knexSpotify('playlists');
   } catch (message) {
     console.error(message);
   }

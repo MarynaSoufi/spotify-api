@@ -95,15 +95,28 @@ export const deletePlaylist = async (request, response) => {
  */
 export const addSong = async (request, response) => {
   try {
-      const { playlistId, songId, userId } = parsePlaylistSong(request);
+      const { playlistId, songId, userId} = parsePlaylistSong(request);
       //check whether playlist belongs to user with userId
       const playlist = await playlistsDb.get(userId, playlistId);
+      const playlistSongs = await playlistsDb.getSongs(userId, playlistId);
+      const {name} = request.body;
+      const  {modifiedAt} = request.body;
+      const songs = playlistSongs.songs.map((s) => {
+        return s.id;
+      })
+      // console.log(songs);
       if(!playlist) {
         response.status(404).json({ error: `User doesn't have playlist with id ${playlistId}` });
         return;
       }
-      await playlistsDb.addSong(playlistId, songId);
-      response.status(201).json({});
+      if(songs.indexOf(songId) === -1) {
+        await playlistsDb.addSong(playlistId, songId);
+        await playlistsDb.update(playlistId, name, modifiedAt, userId);
+        response.status(201).json({});
+      }else {
+        response.status(400).json({ error: `Playlist with id ${playlistId} alredy has a song with id ${songId}` });
+      }
+     
   } catch({ message }) {
       response.status(500).json({ error: message });
   }
@@ -119,7 +132,9 @@ export const addSong = async (request, response) => {
 export const deleteSong = async (request, response) => {
   try {
       const userId = request.userId;
-      const { playlistId, songId } = request.params;
+      const { playlistId, songId,  } = request.params;
+      const {name} = request.body;
+      const  {modifiedAt} = request.body;
       //check whether playlist belongs to user with userId
       const playlist = await playlistsDb.get(userId, playlistId);
       if(!playlist) {
@@ -127,6 +142,7 @@ export const deleteSong = async (request, response) => {
         return;
       }
       await playlistsDb.deleteSong(playlistId, songId);
+      await playlistsDb.update(playlistId, name, modifiedAt, userId);
       response.status(200).json({});
   } catch({ message }) {
       response.status(500).json({ error: message });
